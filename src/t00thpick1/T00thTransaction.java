@@ -64,7 +64,7 @@ public class T00thTransaction extends JavaPlugin{
         File file = this.getDataFolder();
         if (!file.isDirectory()){
             if (!file.mkdirs()) {
-            	this.log.severe("Failed to create T00thTransacction directory folder!");
+            	this.log.severe("Failed to create T00thTransaction directory folder!");
             	getServer().getPluginManager().disablePlugin(T00thTransaction);
             	return;
             }
