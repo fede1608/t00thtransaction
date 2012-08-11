@@ -1,0 +1,94 @@
+Config:
+    MySQL:
+        #Enter your mysql information
+        Username: username
+        Password: Password
+        #Replace "localhost" for remote databases
+        URL:
+            IP: localhost
+            PORT: '3306'
+            DATABASE: DATABASE
+    Ranks:
+        Rank1:
+            #Name of the permissions group
+            Name: Coal_Donator
+            #Minimum donation required for rank
+            Minimum_Donation: 5
+            #In game economy money reward, set to zero for none or if no economy plugin is used.
+            MoneyReward: 50
+        Rank2:
+            Name: Iron_Donator
+            Minimum_Donation: 30
+            MoneyReward: 300
+        Rank3:
+            Name: Gold_Donator
+            Minimum_Donation: 60
+            MoneyReward: 600
+        Rank4:
+            Name: Emerald_Donator
+            Minimum_Donation: 100
+            MoneyReward: 1000
+        Rank5:
+            Name: Diamond_Donator
+            Minimum_Donation: 200
+            MoneyReward: 2000
+        Rank6:
+            Name: Obsidian_Donator
+            Minimum_Donation: 500
+            MoneyReward: 5000
+        #If you want more ranks just continue in the format above(i.e. Rank7,  Rank8.....)
+    Settings:
+        #Announce when players donate or are promoted
+        Announce: true
+        #Only give donation perks/promotions if player is online(waits for player if they are not online)
+        OnlyUpdateOnlinePlayers: false
+        #How much in game economy money do they get per dollar donation(set to zero if no economy plugin used or you wish it at zero)
+        CashRewardPerDollar: 1
+        GiftBox:
+            #Enable/disable giftbox
+            Enabled: true
+            #Donation total increments at which players recieve a gift
+            CostPer: 30
+            #Enable built in enchantment gift
+            Enchant: true
+            #Enable built in chainmail gift
+            Chainmail: true
+        Mode:     #Can only choose one mode
+            #Enables total donation based promotions
+            LifeTimeRanksEnabled: true
+            #Enables package based promotions
+            PackagesEnabled: false
+        IgnoreRanks:  #These ranks will not be removed when reranking donators,  they will still get a donator rank, but they will be in two groups rather than one
+        - Moderator
+        - Admin
+    Packages:
+        ExamplePackage:   #This is an example package,  You can copy and paste this to make more, just rename it to soemthing other than "example package"
+            Items:
+                #Amounts for each item  seperated by "/"
+                Amounts: 2/5/1         
+                # Item id for each item, seperated by "/"  for durability add a "_"				
+                IDs: 57/351_15/302
+                #Enchantments for each item, seperated by "/"  put a "0" for none,  multiple enchantments supported by "&"
+                Enchants: 0/0/5_3&0_4   
+            #the setup for items above would give 2 diamond blocks, 5 bonemeal and 1 chain helm enchanted with protection 4 and respiration 3
+            Days: 30   # days until expire
+            Promote:
+                #promote on activation
+                Enabled: true    
+                #what rank to promote to
+                ToRank: Coal_Donator
+            Money: 300   
+            Commands:
+                Activation:
+                    # These commands run on activation, you can add more in format Command3, Command4....   use %player to enter playername
+                    Command1: op %player
+                    Command2: op %player
+                Expiration:
+                    # These commands run on expire, you can add more in format Command3, Command4....
+                    Command1: deop %player      
+                    Command2: deop %player
+            DemoteOnExpire:
+                #Demote on expire
+                Enabled: true
+                #What rank to set to
+                ToRank: Resident
