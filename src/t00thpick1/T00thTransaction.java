@@ -1215,7 +1215,7 @@ public class T00thTransaction extends JavaPlugin{
 		    	}
 		    }
 		    if(!something){
-				player.sendMessage(" -"+green+rs.getString("No Available Gifts"));
+				player.sendMessage(" -"+green+"No Available Gifts");
 		    }
 		} catch (SQLException e) {
 			error(e);
