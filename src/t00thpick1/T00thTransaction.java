@@ -32,14 +32,20 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
+
+
 import t00thpick1.DonationEvent;
 import t00thpick1.DonationPromotionEvent;
 
-public class T00thTransaction extends JavaPlugin{
+public class T00thTransaction extends JavaPlugin implements Listener{
 	ChatColor red = ChatColor.DARK_RED;
 	ChatColor gold = ChatColor.GOLD;
 	ChatColor white = ChatColor.WHITE;
@@ -54,6 +60,7 @@ public class T00thTransaction extends JavaPlugin{
     private static boolean giftbox;
     private static boolean packages;
     private static boolean onlinemode;
+    private Map<Player, String> Players = new HashMap<Player, String>();
     private int tiers;
     private static Economy econ = null;
     private static Permission perms = null;
@@ -64,12 +71,12 @@ public class T00thTransaction extends JavaPlugin{
         File file = this.getDataFolder();
         if (!file.isDirectory()){
             if (!file.mkdirs()) {
-            	this.log.severe("Failed to create T00thTransaction directory folder!");
+            	this.log.severe("Failed to create T00thTransacction directory folder!");
             	getServer().getPluginManager().disablePlugin(T00thTransaction);
             	return;
             }
         }
-        loadDefaults();
+        loadDefaults(true);
         if(!this.isEnabled()){
         	return;
     	}	
@@ -90,6 +97,7 @@ public class T00thTransaction extends JavaPlugin{
         }
         this.log.info(perms.getName());	
 		CreateTables();
+        getServer().getPluginManager().registerEvents(this, this);
 		this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Runnable() {
 			   public void run() {   
 			       try {
@@ -107,7 +115,7 @@ public class T00thTransaction extends JavaPlugin{
 			   }
 		}, 60L, 6000L);
 	}
-    public void loadDefaults(){
+    public void loadDefaults(Boolean init){
     	this.log = getLogger();
         FileConfiguration configG = getConfig();
         File configFile = new File(this.getDataFolder()+"/config.yml");
@@ -223,6 +231,9 @@ public class T00thTransaction extends JavaPlugin{
 	        if(!config.contains("Config.Packages.ExamplePackage.Days")){
 	            getConfig().addDefault("Config.Packages.ExamplePackage.Days", 30);
 	        }
+	        if(!config.contains("Config.Packages.ExamplePackage.RunOnLogin")){
+	            getConfig().addDefault("Config.Packages.ExamplePackage.RunOnLogin", false);
+	        }
 	        if(!config.contains("Config.Packages.ExamplePackage.Promote.Enabled")){
 	            getConfig().addDefault("Config.Packages.ExamplePackage.Promote.Enabled", true);
 	        }
@@ -282,8 +293,11 @@ public class T00thTransaction extends JavaPlugin{
         	this.log.info("Invalid value for GiftBox Costper, disabling giftbox feature");
         	config.set("Config.Settings.GiftBox.Enabled", false);
         }
-        setupPermissions();
-        setupEconomy();
+        if(init){
+        	setupPermissions();
+        	setupEconomy();
+        }
+
     }
     private boolean setupPermissions() {
         RegisteredServiceProvider<Permission> rsp = getServer().getServicesManager().getRegistration(Permission.class);
@@ -791,12 +805,12 @@ public class T00thTransaction extends JavaPlugin{
 		    		DonationPromotionEvent event;
 		    		boolean promote = false;
 		    		for(int current = 1; current < tiers-1; current++){
-		    			if((amount>=(float)config.getDouble("Config.Ranks.Rank"+current+".Minimum_Donation"))&&amount<((float)config.getDouble("Config.Ranks.Rank"+(current+1)+".Minimum_Donation")) && !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank"+current+".Name"))){
+		    			if((amount>=(float)config.getDouble("Config.Ranks.Rank."+current+".Minimum_Donation"))&&amount<((float)config.getDouble("Config.Ranks.Rank."+(current+1)+".Minimum_Donation")) && !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank."+current+".Name"))){
 		    				tier = current;
 		    				promote = true;
 		    			}
 		    		}
-		    	    if((amount>=(float)config.getDouble("Config.Ranks.Rank"+tiers+".Minimum_Donation"))&& !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank"+tiers+".Name"))){
+		    	    if((amount>=(float)config.getDouble("Config.Ranks.Rank."+tiers+".Minimum_Donation"))&& !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank."+tiers+".Name"))){
 			    		tier = tiers;
 			    		promote = true;
 		    	    }
@@ -807,16 +821,16 @@ public class T00thTransaction extends JavaPlugin{
 			    				perms.playerRemoveGroup((World)null, player, group);
 			    			}
 			    		}
-			    		perms.playerAddGroup((World)null, player, config.getString("Config.Ranks.Rank"+tier+".Name"));
-			    		event = new DonationPromotionEvent(player, amount, tier, config.getString("Config.Ranks.Rank"+tier+".Name"));
-			    		Double reward = config.getDouble("Config.Ranks.Rank"+tier+".MoneyReward");
+			    		perms.playerAddGroup((World)null, player, config.getString("Config.Ranks.Rank."+tier+".Name"));
+			    		event = new DonationPromotionEvent(player, amount, tier, config.getString("Config.Ranks.Rank."+tier+".Name"));
+			    		Double reward = config.getDouble("Config.Ranks.Rank."+tier+".MoneyReward");
 			    		if(reward>0&&econ!=null){
 			    			econ.depositPlayer(player, reward);
 			    		}
-			    		this.log.info(player+" was promoted to "+ config.getString("Config.Ranks.Rank"+tier+".Name"));
+			    		this.log.info(player+" was promoted to "+ config.getString("Config.Ranks.Rank."+tier+".Name"));
 			    	    this.getServer().getPluginManager().callEvent(event);
 		    	    	if(config.getBoolean("Config.Settings.Announce")){
-		    	    		getServer().broadcastMessage(player + " has been promoted to "+config.getString("Config.Ranks.Rank"+tier+".Name"));
+		    	    		getServer().broadcastMessage(player + " has been promoted to "+config.getString("Config.Ranks.Rank."+tier+".Name"));
 		    	    	}
 		    	    }
 		    	}
@@ -959,7 +973,7 @@ public class T00thTransaction extends JavaPlugin{
 		    		long current = System.currentTimeMillis();
 		    		long expire = (((long)config.getInt("Config.Packages."+packageoption+".Days"))*24*60*60*1000);
 		    		int id = rs.getInt("id");
-		    		if(!(getServer().getPlayer(player)!=null&&onlinemode)&&(current-active)>=expire){
+		    		if(!(getServer().getPlayer(player)!=null&&onlinemode)&&(current-active)>=expire&&expire!=0){
 		    			PackageExpiresEvent event = new PackageExpiresEvent(player, packageoption, amount, active);
 		    			this.getServer().getPluginManager().callEvent(event);
 		    			packageExpiration(player, packageoption);
@@ -1024,23 +1038,23 @@ public class T00thTransaction extends JavaPlugin{
 		}
 		return false;
 	}
-	public void packageActivation(Player player, String packageoption){
+	public boolean packageActivation(Player player, String packageoption){
 		if(!packages){
-			return;
+			return false;
 		}
 		if(!isPackage(packageoption)){
 			player.sendMessage("Invalid package");
-			return;
+			return false;
 		}
 		if(!hasPackage(player, packageoption)){
 			player.sendMessage("You do not have that package");
-			return;
+			return false;
 		}
 		if(!hasRoom(player, packageoption)){
-			return;
+			return false;
 		}
 		if(!usePackage(player, packageoption)){
-			return;
+			return false;
 		}
 		double give = config.getDouble("Config.Packages."+packageoption+".Money");
 		if(give>0&&econ!=null){
@@ -1061,9 +1075,15 @@ public class T00thTransaction extends JavaPlugin{
 		}
 		performCommands(player.getName(), packageoption, parseCommands(player.getName(), packageoption, "Activation"));
 		player.sendMessage("Package successfully activated!");
-		player.sendMessage("Package will expire in " +config.getInt("Config.Packages."+packageoption+".Days")+" days.");
+		if(!(config.getInt("Config.Packages."+packageoption+".Days")==0)){
+			player.sendMessage("Package will expire in " +config.getInt("Config.Packages."+packageoption+".Days")+" days.");
+		}
+		return true;
 	}
 	public boolean packageExpiration(String player, String packageoption){
+		if((config.getInt("Config.Packages."+packageoption+".Days")==0)){
+			return false;
+		}
 		if(config.getBoolean("Config.Packages."+packageoption+".DemoteOnExpire.Enabled")){
 			List<String> ignore = config.getStringList("Config.Settings.IgnoreRanks");
 			for(String group: perms.getPlayerGroups((World)null, player)){
@@ -1216,6 +1236,8 @@ public class T00thTransaction extends JavaPlugin{
 		    }
 		    if(!something){
 				player.sendMessage(" -"+green+"No Available Gifts");
+		    } else if (player.getName()==name) {
+		    	player.sendMessage("Type /package PACKAGENAME to activate");
 		    }
 		} catch (SQLException e) {
 			error(e);
@@ -1224,6 +1246,8 @@ public class T00thTransaction extends JavaPlugin{
 	}
 	public void error(SQLException e){
 		System.out.println("There is a problem with T00thTransaction's database connection");
+		System.out.println("Either there is network problems between you and your database or");
+		System.out.println("Your database info is incorrect in config");
 		e.printStackTrace();
 	}
 	public boolean onCommand(CommandSender sender, Command cmd, String commandLabel, String[] args){
@@ -1233,15 +1257,17 @@ public class T00thTransaction extends JavaPlugin{
 			if(cmd.getName().equalsIgnoreCase("packages") && isPackagesOn()){
 				int page = 0;
 				String name = player.getName();
-				if(args.length ==1) {
+				if(args.length >=1) {
 					try{
 					page = Integer.parseInt(args[0]);
 					} catch (NumberFormatException e){
 						name = args[0];
-						try{
-							page = Integer.parseInt(args[1]);
-						} catch (NumberFormatException e1){
-						}	
+						if(args.length==2){
+							try{
+								page = Integer.parseInt(args[1]);
+							} catch (NumberFormatException e1){
+							}	
+						}
 					}		
 				}
 				ListPackages(player, name, page);
@@ -1299,10 +1325,22 @@ public class T00thTransaction extends JavaPlugin{
 			return false;
 		}
 		if(cmd.getName().equalsIgnoreCase("ttr")){
+			if(args[0].equalsIgnoreCase("reloadconfig")){
+				if(player!=null){
+					if(!player.hasPermission("t00thtransaction.admin")){
+						player.sendMessage(gold+"No soup for you");
+						return true;
+					}
+				}
+				loadDefaults(false);
+				return true;
+			}
 			if(args[0].equalsIgnoreCase("add") && (args.length==3 || args.length==4)){
-				if(!player.hasPermission("t00thtransaction.admin")){
-					player.sendMessage(gold+"No soup for you");
-					return true;
+				if(player!=null){
+					if(!player.hasPermission("t00thtransaction.admin")){
+						player.sendMessage(gold+"No soup for you");
+						return true;
+					}
 				}
 				try{
 					Timestamp ts;
@@ -1332,9 +1370,11 @@ public class T00thTransaction extends JavaPlugin{
 				}		
 			}
 			if(args[0].equalsIgnoreCase("addgift") && args.length==2){
-				if(!player.hasPermission("t00thtransaction.admin")){
-					player.sendMessage(gold+"No soup for you");
-					return true;
+				if(player!=null){
+					if(!player.hasPermission("t00thtransaction.admin")){
+						player.sendMessage(gold+"No soup for you");
+						return true;
+					}
 				}
 				if(sender instanceof Player){
 					if(GiftBoxAdd(args[1])){
@@ -1352,9 +1392,11 @@ public class T00thTransaction extends JavaPlugin{
 				return true;		
 			}
 			if(args[0].equalsIgnoreCase("removegift") && args.length==2){
-				if(!player.hasPermission("t00thtransaction.admin")){
-					player.sendMessage(gold+"No soup for you");
-					return true;
+				if(player!=null){
+					if(!player.hasPermission("t00thtransaction.admin")){
+						player.sendMessage(gold+"No soup for you");
+						return true;
+					}
 				}
 				if(sender instanceof Player){
 					if(GiftBoxRemove(args[1])){
@@ -1402,11 +1444,13 @@ public class T00thTransaction extends JavaPlugin{
 					total = getTotal(playername);
 					player.sendMessage(gold+playername+": $"+white+total);
 					return true;
-				} else { 
+				} else if(args.length==2){
 					float total = 0;
 					total = getTotal(args[1]);
 					this.log.info(args[1]+": $"+total);
 					return true;
+				} else {
+					this.log.info("Not enough arguments");
 				}
 			}
 			if(args[0].equalsIgnoreCase("listcheck")){
@@ -1506,6 +1550,10 @@ public class T00thTransaction extends JavaPlugin{
 					if(lifetimeranks){
 						UpdateAccounts();
 					}
+					if(packages){
+						UpdateNewPackages();
+						CheckExpirations();
+					}
 					UpdateNewDonations();
 					if(player!=null){
 						player.sendMessage(gold+"Donator rank check has been run!");
@@ -1555,4 +1603,29 @@ public class T00thTransaction extends JavaPlugin{
 	public static boolean isLifetimeranks() {
 		return lifetimeranks;
 	}
+    @EventHandler(priority = EventPriority.NORMAL)
+    public void onPlayerJoin(PlayerJoinEvent event) {
+        Player player = event.getPlayer();
+        for(String Package: config.getConfigurationSection("Config.Packages").getKeys(false)){
+        	if(hasPackage(player, Package)){
+        		if(config.getBoolean("Config.Packages."+Package+".RunOnLogin")){
+        			if(packageActivation(player, Package)){
+        				return;
+        			}		
+        		}
+        		Players.put(player, Package);
+            	getServer().getScheduler().scheduleSyncDelayedTask(this, new Runnable() {
+         		   public void run() {
+         		       for(Player player: Players.keySet()){
+         		    	   if(player.isOnline()){
+         		    		   player.sendMessage(ChatColor.DARK_RED+"You have a Donation Package Available: "+Players.get(player));
+         		    	   }
+         		    	   Players.remove(player);
+         		       }
+         		   }
+            	}, 120L);
+        	}
+        	
+        }
+    }
 }
