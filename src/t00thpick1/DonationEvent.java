@@ -5,24 +5,16 @@ import org.bukkit.event.HandlerList;
  
 public class DonationEvent extends Event{
     private static final HandlerList handlers = new HandlerList();
-    private String player;
-    private float amount;
+    private Donation donation;
  
-    public DonationEvent(String Donator, float donation) {
-        amount = donation;
-        player = Donator;
+    public DonationEvent(Donation newdonation) {
+        donation = newdonation;
     }
 	/**
-	 * @return the player
+	 * @return the Donation object
 	 */
-    public String getPlayer() {
-        return player;
-    }
-	/**
-	 * @return the donation amount
-	 */
-    public float getAmount() {
-    	return amount;
+    public Donation getDonation() {
+        return donation;
     }
  
     public HandlerList getHandlers() {

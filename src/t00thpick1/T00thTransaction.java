@@ -14,6 +14,7 @@ import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
@@ -894,6 +895,29 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		return;
 		
 	}
+	public static HashSet<Donation> getAllDonations() throws SQLException { 
+		Connection conn = DriverManager.getConnection(url, user, pass); 
+		HashSet<Donation> donations = new HashSet<Donation>();
+		try {
+			String query = "SELECT * FROM toothtransaction";
+		    Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+		    while (rs.next()) {
+		    	if(rs.getObject("player") != null){
+		    		donations.add(new Donation(rs.getString("player"), rs.getFloat("amount"), rs.getTimestamp("timestamp"), rs.getInt("used")));
+		    	}
+		    }
+		} catch (SQLException e) {
+			System.out.println("There is a problem with T00thTransaction's database connection");
+			System.out.println("Either there is network problems between you and your database or");
+			System.out.println("Your database info is incorrect in config");
+			e.printStackTrace();
+		}
+
+		conn.close(); 
+		return donations;
+		
+	}
 	public void UpdateNewDonations() throws SQLException {
 		Connection conn = DriverManager.getConnection(url, user, pass);
 		this.log.info("Running Donation check!");
@@ -910,7 +934,8 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		    		String player = rs.getString("player");
 		    		if(!(getServer().getPlayer(player)==null&&onlinemode)){
 		    			float Donation = Math.round(rs.getFloat("amount"));
-		    			DonationEvent event = new DonationEvent(player, Donation);
+		    			Donation donation = new Donation(player, Donation, rs.getTimestamp("timestamp"), 1);
+		    			DonationEvent event = new DonationEvent(donation);
 		    			this.getServer().getPluginManager().callEvent(event);
 		    			Double amount = (double)Donation*config.getDouble("Config.Settings.CashRewardPerDollar");
 		    			String announce = player+" has donated "+Donation;
