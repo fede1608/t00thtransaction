@@ -714,14 +714,14 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		player.sendMessage(gold + "Your armor is now chainmail");
 		return true;
 	}
-	public void DropTables() throws SQLException { //Change "SampleFunction" to your own function name (Can be anything, unless it already exists)
-		Connection conn = DriverManager.getConnection(url, user, pass); //Creates the connection
+	public void DropTables() throws SQLException {
+		Connection conn = DriverManager.getConnection(url, user, pass);
 		Statement stmt = conn.createStatement();
 		String sql = "DROP TABLE toothtransaction";
 		stmt.executeUpdate(sql);
 		sql = "DROP TABLE toothgiftbox";
 		stmt.executeUpdate(sql);
-		conn.close(); //Closes the connection
+		conn.close();
 	}
 	public String escape(String string){
 		String result = StringEscapeUtils.escapeJava(string.replaceAll("'", "").replaceAll("\\\\", "").replaceAll("\"", ""));
@@ -729,20 +729,20 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 	}
 	public void Insert(String player, float amount, Timestamp timestamp) throws SQLException {
 		player = escape(player);
-		Connection conn = DriverManager.getConnection(url, user, pass); //Creates the connection
+		Connection conn = DriverManager.getConnection(url, user, pass);
 		Statement stmt = conn.createStatement();
 		String sql = "INSERT INTO toothtransaction (player, amount, timestamp, used, ipn) VALUES ('"+player+"', "+amount+", '"+timestamp+"', 0, null)";
-		stmt.executeUpdate(sql); //Executes the query
-		stmt.close(); //Closes the query
-		conn.close(); //Closes the connection
+		stmt.executeUpdate(sql);
+		stmt.close();
+		conn.close();
 	}
 	public void Delete(int id) throws SQLException {
-		Connection conn = DriverManager.getConnection(url, user, pass); //Creates the connection
+		Connection conn = DriverManager.getConnection(url, user, pass);
 		Statement stmt = conn.createStatement();
 		String sql = "DELETE * FROM toothtransaction WHERE id='"+id+"'";
-		stmt.executeUpdate(sql); //Executes the query
-		stmt.close(); //Closes the query
-		conn.close(); //Closes the connection
+		stmt.executeUpdate(sql);
+		stmt.close();
+		conn.close();
 	}
 	public void GetAllBalances(Player player, int page) throws SQLException {
 		Connection conn = DriverManager.getConnection(url, user, pass);
