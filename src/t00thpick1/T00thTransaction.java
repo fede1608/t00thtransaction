@@ -228,49 +228,56 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 	        if(!config.contains("Config.Ranks.Rank6.Minimum_Donation")){
 	            getConfig().addDefault("Config.Ranks.Rank6.Minimum_Donation", 500);
 	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Days")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Days", 30);
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.RunOnLogin")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.RunOnLogin", false);
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Promote.Enabled")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Promote.Enabled", true);
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Promote.ToRank")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Promote.ToRank", "Coal_Donator");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Money")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Money", 300);
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Items.IDs")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Items.IDs", "57/351_15/302");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Items.Amount")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Items.Amounts", "2/5/1");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Items.Enchants")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Items.Enchants", "0/0/5_3&0_4");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Commands.Activation.Command1")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Activation.Command1", "op %player");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Commands.Activation.Command2")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Activation.Command2", "op %player");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Commands.Expiration.Command1")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Expiration.Command1", "deop %player");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.Commands.Expiration.Command2")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Expiration.Command2", "deop %player");
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.DemoteOnExpire.Enabled")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.DemoteOnExpire.Enabled", true);
-	        }
-	        if(!config.contains("Config.Packages.ExamplePackage.DemoteOnExpire.ToRank")){
-	            getConfig().addDefault("Config.Packages.ExamplePackage.DemoteOnExpire.ToRank", "Resident");
-	        }
-    	}
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Days")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Days", 30);
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.RunOnLogin")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.RunOnLogin", false);
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Promote.Enabled")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Promote.Enabled", true);
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Promote.ToRank")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Promote.ToRank", "Coal_Donator");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Money")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Money", 300);
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Items.IDs")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Items.IDs", "57/351_15/302");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Items.Amount")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Items.Amounts", "2/5/1");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Items.Enchants")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Items.Enchants", "0/0/5_3&0_4");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Commands.Activation.Command1")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Activation.Command1", "op %player");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Commands.Activation.Command2")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Activation.Command2", "op %player");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Commands.Expiration.Command1")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Expiration.Command1", "deop %player");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.Commands.Expiration.Command2")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.Commands.Expiration.Command2", "deop %player");
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.DemoteOnExpire.Enabled")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.DemoteOnExpire.Enabled", true);
+        }
+        if(!config.contains("Config.Packages.ExamplePackage.DemoteOnExpire.ToRank")){
+        	getConfig().addDefault("Config.Packages.ExamplePackage.DemoteOnExpire.ToRank", "Resident");
+        }
+        if(config.getConfigurationSection("Config.Packages")!=null){
+        	for(String Package: config.getConfigurationSection("Config.Packages").getKeys(false)){
+        		if(!config.contains("Config.Packages."+Package+".RunOnLogin")){
+        			config.addDefault("Config.Packages."+Package+".RunOnLogin", false);
+        		}
+        	}
+        }
         configG.options().copyDefaults(true);
         this.saveConfig();
         url = "jdbc:mysql://"+config.getString("Config.MySQL.URL.IP")+":"+config.getString("Config.MySQL.URL.PORT")+"/"+config.getString("Config.MySQL.URL.DATABASE");     
@@ -805,12 +812,12 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		    		DonationPromotionEvent event;
 		    		boolean promote = false;
 		    		for(int current = 1; current < tiers-1; current++){
-		    			if((amount>=(float)config.getDouble("Config.Ranks.Rank."+current+".Minimum_Donation"))&&amount<((float)config.getDouble("Config.Ranks.Rank."+(current+1)+".Minimum_Donation")) && !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank."+current+".Name"))){
+		    			if((amount>=(float)config.getDouble("Config.Ranks.Rank"+current+".Minimum_Donation"))&&amount<((float)config.getDouble("Config.Ranks.Rank"+(current+1)+".Minimum_Donation")) && !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank"+current+".Name"))){
 		    				tier = current;
 		    				promote = true;
 		    			}
 		    		}
-		    	    if((amount>=(float)config.getDouble("Config.Ranks.Rank."+tiers+".Minimum_Donation"))&& !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank."+tiers+".Name"))){
+		    	    if((amount>=(float)config.getDouble("Config.Ranks.Rank"+tiers+".Minimum_Donation"))&& !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank"+tiers+".Name"))){
 			    		tier = tiers;
 			    		promote = true;
 		    	    }
@@ -821,16 +828,16 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			    				perms.playerRemoveGroup((World)null, player, group);
 			    			}
 			    		}
-			    		perms.playerAddGroup((World)null, player, config.getString("Config.Ranks.Rank."+tier+".Name"));
-			    		event = new DonationPromotionEvent(player, amount, tier, config.getString("Config.Ranks.Rank."+tier+".Name"));
-			    		Double reward = config.getDouble("Config.Ranks.Rank."+tier+".MoneyReward");
+			    		perms.playerAddGroup((World)null, player, config.getString("Config.Ranks.Rank"+tier+".Name"));
+			    		event = new DonationPromotionEvent(player, amount, tier, config.getString("Config.Ranks.Rank"+tier+".Name"));
+			    		Double reward = config.getDouble("Config.Ranks.Rank"+tier+".MoneyReward");
 			    		if(reward>0&&econ!=null){
 			    			econ.depositPlayer(player, reward);
 			    		}
-			    		this.log.info(player+" was promoted to "+ config.getString("Config.Ranks.Rank."+tier+".Name"));
+			    		this.log.info(player+" was promoted to "+ config.getString("Config.Ranks.Rank"+tier+".Name"));
 			    	    this.getServer().getPluginManager().callEvent(event);
 		    	    	if(config.getBoolean("Config.Settings.Announce")){
-		    	    		getServer().broadcastMessage(player + " has been promoted to "+config.getString("Config.Ranks.Rank."+tier+".Name"));
+		    	    		getServer().broadcastMessage(player + " has been promoted to "+config.getString("Config.Ranks.Rank"+tier+".Name"));
 		    	    	}
 		    	    }
 		    	}
@@ -891,7 +898,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		Connection conn = DriverManager.getConnection(url, user, pass);
 		this.log.info("Running Donation check!");
 		try {
-			String query = "SELECT player, amount, used FROM toothtransaction WHERE NOT used = 1 GROUP BY player";
+			String query = "SELECT player, amount, used FROM toothtransaction WHERE NOT used = 1 ORDER BY player";
 		    Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 		    query = "UPDATE toothtransaction SET used = 1 WHERE used = 0";
@@ -901,7 +908,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		    while (rs.next()) {
 		    	if(rs.getObject("player") != null){
 		    		String player = rs.getString("player");
-		    		if(!(getServer().getPlayer(player)!=null&&onlinemode)){
+		    		if(!(getServer().getPlayer(player)==null&&onlinemode)){
 		    			float Donation = Math.round(rs.getFloat("amount"));
 		    			DonationEvent event = new DonationEvent(player, Donation);
 		    			this.getServer().getPluginManager().callEvent(event);
