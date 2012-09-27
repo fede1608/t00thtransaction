@@ -1,15 +1,11 @@
 name: T00thTransaction
 main: t00thpick1.T00thTransaction
-version: 1.5
+version: 1.10
 author: t00thpick1
 depend: [Vault]
 commands:
    ttr:
       Description: Does everything
-   giftbox:
-      Description: List available gifts
-   gift:
-      Description: Activate gift
    package:
       Description: Activate package
    packages:
