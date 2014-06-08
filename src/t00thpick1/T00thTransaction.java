@@ -651,7 +651,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 	public boolean hasPackage(Player player, String packageoption){
 		try {
 			Connection conn = DriverManager.getConnection(url, user, pass);
-			String query = "SELECT player, cost, package, status, activated FROM toothpackages WHERE status = '1' AND player = '"+player.getName()+"' AND package ='"+packageoption+"'";
+			String query = "SELECT player, cost, package, status, activated FROM toothpackages WHERE status = '1' AND LOWER( player ) = LOWER( '"+player.getName()+"') AND package ='"+packageoption+"'";
 		    Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 		    while (rs.next()) {
@@ -667,7 +667,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 	public boolean usePackage(Player player, String packageoption){
 		try {
 			Connection conn = DriverManager.getConnection(url, user, pass);
-			String query = "SELECT id, player, cost, package, status, activated FROM toothpackages WHERE status = '1' AND player = '"+player.getName()+"' AND package ='"+packageoption+"'";
+			String query = "SELECT id, player, cost, package, status, activated FROM toothpackages WHERE status = '1' AND LOWER( player ) = LOWER( '"+player.getName()+"') AND package ='"+packageoption+"'";
 		    Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 			int id = -1;
@@ -706,7 +706,12 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			player.sendMessage("You do not have that package");
 			return false;
 		}
+		if(hasAnotherPackage(player)){
+			player.sendMessage("Tienes disponible: "+packageoption+". Se te acreditara cuando se te termine el pack actual.");
+			return false;
+		}
 		if(!hasRoom(player, packageoption)){
+			player.sendMessage("No Tienes espacio en tu Inventario Para acreditarte: "+packageoption);
 			return false;
 		}
 		if(!usePackage(player, packageoption)){
@@ -735,6 +740,22 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			player.sendMessage("Package will expire in " +config.getInt("Config.Packages."+packageoption+".Days")+" days.");
 		}
 		return true;
+	}
+	public boolean hasAnotherPackage(Player player) {
+		try {
+			Connection conn = DriverManager.getConnection(url, user, pass);
+			String query = "SELECT player, cost, package, status, activated FROM toothpackages WHERE status = '2' AND LOWER( player ) = LOWER('"+player.getName()+"')";
+		    Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+		    while (rs.next()) {
+		    	if(rs.getObject("player") != null){
+		    		return true;
+		    	}
+		    }
+		} catch (SQLException e) {
+			error(e);
+		}
+		return false;
 	}
 	public boolean packageExpiration(String player, String packageoption){
 		if((config.getInt("Config.Packages."+packageoption+".Days")==0)){
@@ -881,7 +902,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		}
 		try {
 			Connection conn = DriverManager.getConnection(url, user, pass);
-			String query = "SELECT player, package FROM toothpackages WHERE status = '1' AND player = '"+name+"'";
+			String query = "SELECT player, package FROM toothpackages WHERE status = '1' AND LOWER( player ) = LOWER( '"+name+"')";
 		    Statement stmt = conn.createStatement();
 			ResultSet rs = stmt.executeQuery(query);
 			player.sendMessage(gold+"Available packages for "+name);
