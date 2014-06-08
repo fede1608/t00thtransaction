@@ -86,7 +86,9 @@ public class T00thTransaction extends JavaPlugin implements Listener{
         }
         this.log.info(perms.getName());	
 		CreateTables();
-        getServer().getPluginManager().registerEvents(this, this);
+		if(isPackagesOn()) {
+		    getServer().getPluginManager().registerEvents(this, this);
+		}
 		this.getServer().getScheduler().scheduleAsyncRepeatingTask(this, new Runnable() {
 			   public void run() {   
 			       try {
@@ -298,13 +300,23 @@ public class T00thTransaction extends JavaPlugin implements Listener{
         user = config.getString("Config.MySQL.Username");
         lifetimeranks = config.getBoolean("Config.Settings.Mode.LifeTimeRanksEnabled");
         packages = config.getBoolean("Config.Settings.Mode.PackagesEnabled");
-        onlinemode = config.getBoolean("Config.Settings.OnlyUpdateOnlinePlayers");
-        tiers = config.getConfigurationSection("Config.Ranks").getKeys(false).size();
-        if(defaul||url.equals("jdbc:mysql://LOCALHOST:3306/DATABASE")){
+        onlinemode = config.getBoolean("Config.Settings.OnlyUpdateOnlinePlayers");  
+        if(lifetimeranks) {
+            if(config.getConfigurationSection("Config.Ranks") != null) {
+                if(config.getConfigurationSection("Config.Ranks").getKeys(false) != null) {
+                    tiers = config.getConfigurationSection("Config.Ranks").getKeys(false).size();
+                } else {
+                    this.log.severe("There seems to be an issue with your config regarding ranks");
+                }
+            } else {
+                this.log.severe("There seems to be an issue with your config regarding ranks");
+            }
+        }  
+        if(defaul || url.equals("jdbc:mysql://LOCALHOST:3306/DATABASE")){
         	this.log.warning("SQL database info not found, disabling...");
         	getServer().getPluginManager().disablePlugin(this);
         }
-        if(init){
+        if(init) { 
         	setupPermissions();
         	setupEconomy();
         }
@@ -431,38 +443,39 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		    		int tier = 0;
 		    		DonationPromotionEvent event;
 		    		boolean promote = false;
-		    		for(int current = 1; current <= tiers-1; current++){
-		    			if((amount >= (float)config.getDouble("Config.Ranks.Rank"+current+".Minimum_Donation")) && amount < ((float)config.getDouble("Config.Ranks.Rank"+(current+1)+".Minimum_Donation")) && !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank"+current+".Name"))){
-		    				tier = current;
-		    				promote = true;
-		    			}
-		    		}
-		    	    if((amount >= (float)config.getDouble("Config.Ranks.Rank"+tiers+".Minimum_Donation")) && !perms.playerInGroup(world, player, config.getString("Config.Ranks.Rank"+tiers+".Name"))){
-			    		tier = tiers;
-			    		promote = true;
-		    	    }
-		    	    if(player.equals("")||player.equals(null)){
+		    	    if(player.equals("")||player==null){
 		    	    	log.warning("Empty playername in donation database");
 		    	    	promote = false;
-		    	    }
-		    	    if(promote&&!(onlinemode&&getServer().getPlayer(player)==null)){
-			    		List<String> ignore = config.getStringList("Config.Settings.IgnoreRanks");
-			    		for(String group: perms.getPlayerGroups((World)null, player)){
-			    			if(!ignore.contains(group)){
-			    				perms.playerRemoveGroup((World)null, player, group);
-			    			}
-			    		}
-			    		perms.playerAddGroup((World)null, player, config.getString("Config.Ranks.Rank"+tier+".Name"));
-			    		event = new DonationPromotionEvent(player, amount, tier, config.getString("Config.Ranks.Rank"+tier+".Name"));
-			    		Double reward = config.getDouble("Config.Ranks.Rank"+tier+".MoneyReward");
-			    		performCommands(player, parseCommandsRanks(player, tier));
-			    		if(reward>0&&econ!=null){
-			    			econ.depositPlayer(player, reward);
-			    		}
-			    		this.log.info(player+" was promoted to "+ config.getString("Config.Ranks.Rank"+tier+".Name"));
-			    	    this.getServer().getPluginManager().callEvent(event);
-		    	    	if(config.getBoolean("Config.Settings.Announce")){
-		    	    		getServer().broadcastMessage(player + " has been promoted to "+config.getString("Config.Ranks.Rank"+tier+".Name"));
+		    	    } else {
+		    	    	for(int current = 1; current <= (tiers-1); current++){
+		    	    		if((amount >= (float)config.getDouble("Config.Ranks.Rank"+current+".Minimum_Donation")) && (amount < (float)config.getDouble("Config.Ranks.Rank"+(current+1)+".Minimum_Donation")) && !Arrays.asList(perms.getPlayerGroups(world, player)).contains(config.getString("Config.Ranks.Rank"+current+".Name"))){
+		    	    			tier = current;
+		    	    			promote = true;
+		    	    		}
+		    	    	}
+		    	    	if((amount >= (float)config.getDouble("Config.Ranks.Rank"+tiers+".Minimum_Donation")) && !Arrays.asList(perms.getPlayerGroups(world, player)).contains(config.getString("Config.Ranks.Rank"+tiers+".Name"))){
+		    	    		tier = tiers;
+		    	    		promote = true;
+		    	    	}
+		    	    	if(promote&&!(onlinemode&&getServer().getPlayer(player)==null)){
+		    	    		List<String> ignore = config.getStringList("Config.Settings.IgnoreRanks");
+		    	    		for(String group: perms.getPlayerGroups((World)null, player)){
+		    	    			if(!ignore.contains(group)){
+		    	    				perms.playerRemoveGroup((World)null, player, group);
+		    	    			}
+		    	    		}
+		    	    		perms.playerAddGroup((World)null, player, config.getString("Config.Ranks.Rank"+tier+".Name"));
+		    	    		event = new DonationPromotionEvent(player, amount, tier, config.getString("Config.Ranks.Rank"+tier+".Name"));
+		    	    		Double reward = config.getDouble("Config.Ranks.Rank"+tier+".MoneyReward");
+		    	    		performCommands(player, parseCommandsRanks(player, tier));
+		    	    		if(reward>0&&econ!=null){
+		    	    			econ.depositPlayer(player, reward);
+		    	    		}
+		    	    		this.log.info(player+" was promoted to "+ config.getString("Config.Ranks.Rank"+tier+".Name"));
+		    	    		this.getServer().getPluginManager().callEvent(event);
+		    	    		if(config.getBoolean("Config.Settings.Announce")){
+		    	    			getServer().broadcastMessage(player + " has been promoted to "+config.getString("Config.Ranks.Rank"+tier+".Name"));
+		    	    		}
 		    	    	}
 		    	    }
 		    	}
@@ -557,7 +570,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		    	if(rs.getObject("player") != null){
 		    		String player = rs.getString("player");
 		    		if(!(getServer().getPlayer(player)==null&&onlinemode)){
-		    			float Donation = Math.round(rs.getFloat("amount"));
+		    			float Donation = Math.round(rs.getFloat("amount")*100)/100;
 		    			Donation donation = new Donation(rs.getInt("id"), player, Donation, rs.getTimestamp("timestamp"), 1);
 		    			DonationEvent event = new DonationEvent(donation);
 		    			this.getServer().getPluginManager().callEvent(event);
@@ -782,11 +795,11 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		int i = 0;
 		for(Object com: coms){
 			String command = config.getString("Config.Packages."+packageoption+".Commands."+when+"."+com).replace("%player", player);
-			if(getServer().getPluginCommand(command.split(" ")[0]) != null){
+			if(getServer().getPluginCommand(command.split(" ")[0]) == null){
 				this.log.warning("Invalid Command: "+command + " in package: "+packageoption);
 				command = null;
 			}
-			commands[i]=command;
+			commands[i] = command;
 			i++;
 		}
 		return commands;
@@ -798,11 +811,11 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			int i = 0;
 			for(Object com: coms){
 				String command = config.getString("Config.Ranks.Rank"+Ranktier+".Commands."+com).replace("%player", player);
-				if(getServer().getPluginCommand(command.split(" ")[0]) != null){
+				if(getServer().getPluginCommand(command.split(" ")[0]) == null){
 					this.log.warning("Invalid Command: "+command + " in rank: "+Ranktier);
 					command = null;
 				}
-				commands[i]=command;
+				commands[i] = command;
 				i++;
 			}
 			return commands;
@@ -957,6 +970,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 					}		
 				}
 				ListPackages(player, name, page);
+				return true;
 			}
 			if(cmd.getName().equalsIgnoreCase("package") && isPackagesOn()){
 				if(args.length==1){
@@ -971,14 +985,24 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		}
 		if(cmd.getName().equalsIgnoreCase("ttr")){
 			if(args.length==0){
-				player.sendMessage(gold+"Commands:");
-				player.sendMessage(red+"    - ttr add PLAYER AMOUNT (MM-DD-YYYY)");
-				player.sendMessage(red+"    - ttr check (PLAYER)");
-				player.sendMessage(red+"    - ttr listcheck PLAYER (PAGE)");
-				player.sendMessage(red+"    - ttr checkall (PAGE)");
-				player.sendMessage(red+"    - ttr updateaccounts");
-				player.sendMessage(red+"    - ttr delete ENTRYID");
-				return true;
+				if(sender instanceof Player){
+					player.sendMessage(gold+"Commands:");
+					player.sendMessage(red+"    - ttr check (PLAYER)");
+					player.sendMessage(red+"    - ttr listcheck PLAYER (PAGE)");
+					player.sendMessage(red+"    - ttr checkall (PAGE)");
+					player.sendMessage(red+"    - ttr updateaccounts");
+					return true;
+				} else {
+					sender.sendMessage(gold+"Commands:");
+					sender.sendMessage(red+"    - ttr add PLAYER AMOUNT (MM-DD-YYYY)");
+					sender.sendMessage(red+"    - ttr addnew PLAYER AMOUNT (MM-DD-YYYY)");
+					sender.sendMessage(red+"    - ttr check (PLAYER)");
+					sender.sendMessage(red+"    - ttr listcheck PLAYER (PAGE)");
+					sender.sendMessage(red+"    - ttr checkall (PAGE)");
+					sender.sendMessage(red+"    - ttr updateaccounts");
+					sender.sendMessage(red+"    - ttr delete ENTRYID");
+					return true;
+				}
 			}
 			if(args[0].equalsIgnoreCase("reloadconfig")){
 				if(player!=null){
@@ -990,13 +1014,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 				loadDefaults(false);
 				return true;
 			}
-			if(args[0].equalsIgnoreCase("add") && (args.length==3 || args.length==4)){
-				if(player!=null){
-					if(!player.hasPermission("t00thtransaction.admin")){
-						player.sendMessage(gold+"No soup for you");
-						return true;
-					}
-				}
+			if(args[0].equalsIgnoreCase("add") && (args.length==3 || args.length==4) && !(sender instanceof Player)){
 				try{
 					Timestamp ts;
 					if(args.length==3){
@@ -1008,32 +1026,19 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 							parsedDate = dateFormat.parse(args[3]);
 						} catch (ParseException e) {
 							e.printStackTrace();
-							if(sender instanceof Player){
-								sender.sendMessage("/ttr add PLAYER AMOUNT MM-DD-YYYY");
-							} else {
-								System.out.println("/ttr add PLAYER AMOUNT MM-DD-YYYY");
-							}
+							System.out.println("/ttr add PLAYER AMOUNT MM-DD-YYYY");
 							return false;
 						}
 						ts = new java.sql.Timestamp(parsedDate.getTime());
 					}
 					Insert(args[1], Float.valueOf(args[2]), ts, 1);
-					if(player!=null){
-						player.sendMessage(gold+"You have added a "+ChatColor.DARK_GREEN+"$"+args[2]+gold+" donation from "+args[1]);
-					}
 					this.log.info(args[1]+" has been added with the amount: $"+args[2]);
 					return true;
 				} catch (SQLException e){
 					error(e);
-				}		
-			}
-			if(args[0].equalsIgnoreCase("addnew") && (args.length==3 || args.length==4)){
-				if(player!=null){
-					if(!player.hasPermission("t00thtransaction.admin")){
-						player.sendMessage(gold+"No soup for you");
-						return true;
-					}
 				}
+			}
+			if(args[0].equalsIgnoreCase("addnew") && (args.length==3 || args.length==4) && !(sender instanceof Player)){
 				try{
 					Timestamp ts;
 					if(args.length==3){
@@ -1045,19 +1050,12 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 							parsedDate = dateFormat.parse(args[3]);
 						} catch (ParseException e) {
 							e.printStackTrace();
-							if(sender instanceof Player){
-								sender.sendMessage("/ttr add PLAYER AMOUNT MM-DD-YYYY");
-							} else {
-								System.out.println("/ttr add PLAYER AMOUNT MM-DD-YYYY");
-							}
+							System.out.println("/ttr addnew PLAYER AMOUNT MM-DD-YYYY");
 							return false;
 						}
 						ts = new java.sql.Timestamp(parsedDate.getTime());
 					}
 					Insert(args[1], Float.valueOf(args[2]), ts, 0);
-					if(player!=null){
-						player.sendMessage(gold+"You have added a new "+ChatColor.DARK_GREEN+"$"+args[2]+gold+" donation from "+args[1]);
-					}
 					this.log.info(args[1]+" has been added with the amount: $"+args[2]);
 					return true;
 				} catch (SQLException e){
@@ -1073,7 +1071,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 				if(args.length==3&&args[2].equalsIgnoreCase("confirm"))
 				try{
 					Delete(Integer.valueOf(args[1]));
-					player.sendMessage(gold+"Entry "+args[1]+" has been deleted.");
+					System.out.println("Entry "+args[1]+" has been deleted.");
 					this.log.info("Entry "+args[1]+" has been deleted.");
 					return true;
 				} catch (SQLException e){
@@ -1082,16 +1080,12 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			}
 			if(args[0].equalsIgnoreCase("check")){
 				if(sender instanceof Player){
-					if(!player.hasPermission("t00thtransaction.admin")&&args.length>1){
+					if(!player.hasPermission("t00thtransaction.admin")&&args.length>1&&!player.hasPermission("t00thtransaction.check")){
 						player.sendMessage(gold+"No soup for you");
 						return true;
 					}
 					String playername;
 					if(args.length==2){
-						if(!player.hasPermission("t00thtransaction.check")&&!player.getName().equals(args[1])){
-							player.sendMessage(gold+"No soup for you");
-							return true;
-						}
 						playername = args[1];
 					} else {
 						playername = player.getName();
@@ -1111,16 +1105,12 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			}
 			if(args[0].equalsIgnoreCase("listcheck")){
 				if(sender instanceof Player){
-					if(!player.hasPermission("t00thtransaction.admin")&&args.length>1){
+					if(!player.hasPermission("t00thtransaction.admin")&&args.length>1&&!player.hasPermission("t00thtransaction.check")){
 						player.sendMessage(gold+"No soup for you");
 						return true;
 					}
 					String playername;
 					if(args.length==2){
-						if(!player.hasPermission("t00thtransaction.check")&&!player.getName().equals(args[1])){
-							player.sendMessage(gold+"No soup for you");
-							return true;
-						}
 						playername = args[1];
 					} else {
 						playername = player.getName();
@@ -1204,7 +1194,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 				}
 			}
 		}
-		if(player!=null){
+		if(player != null){
 			player.sendMessage("Command syntax incorrect");
 		} else {
 			this.log.info("Command failed");
@@ -1237,9 +1227,6 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 	}
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
-    	if(!isPackagesOn()){
-    		return;
-    	}
         Player player = event.getPlayer();
         for(String Package: config.getConfigurationSection("Config.Packages").getKeys(false)){
         	if(hasPackage(player, Package)){
