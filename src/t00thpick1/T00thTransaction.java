@@ -720,11 +720,11 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			return false;
 		}
 		if(hasAnotherPackage(player)){
-			player.sendMessage("Tienes disponible: "+packageoption+". Se te acreditara cuando se te termine el pack actual.");
+			player.sendMessage(red+"Tienes disponible: "+packageoption+". Se te acreditara cuando se te termine el pack actual.");
 			return false;
 		}
 		if(!hasRoom(player, packageoption)){
-			player.sendMessage("No Tienes espacio en tu Inventario Para acreditarte: "+packageoption);
+			player.sendMessage(red+"No Tienes espacio en tu Inventario Para acreditarte: "+packageoption);
 			return false;
 		}
 		if(!usePackage(player, packageoption)){
@@ -748,9 +748,9 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			perms.playerAddGroup(player, config.getString("Config.Packages."+packageoption+".Promote.ToRank"));
 		}
 		performCommands(player.getName(), parseCommands(player.getName(), packageoption, "Activation"));
-		player.sendMessage("Package successfully activated!");
+		player.sendMessage(red+"Paquete Activado Exitosamente!");
 		if(!(config.getInt("Config.Packages."+packageoption+".Days")==0)){
-			player.sendMessage("Package will expire in " +config.getInt("Config.Packages."+packageoption+".Days")+" days.");
+			player.sendMessage(red+"Paquete: "+packageoption+" acreditado por " +config.getInt("Config.Packages."+packageoption+".Days")+" dias mas.");
 		}
 		return true;
 	}
