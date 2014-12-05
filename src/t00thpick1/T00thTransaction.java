@@ -43,6 +43,7 @@ import org.bukkit.plugin.RegisteredServiceProvider;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
+
 import t00thpick1.DonationEvent;
 import t00thpick1.DonationPromotionEvent;
 
@@ -95,7 +96,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 			    	   UpdateNewDonations();
 			    	   if(packages){
 			    		   UpdateNewPackages();
-			    		   CheckExpirations();
+			    		   //CheckExpirations();
 			    	   }
 			    	   if(lifetimeranks){
 			    		   UpdateRanks();
@@ -621,46 +622,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 		}
 		return;
 	}
-	public void CheckExpirations() throws SQLException {
-		if(!packages){
-			return;
-		}
-		Connection conn = DriverManager.getConnection(url, user, pass);
-		this.log.info("Running Expiration check!");
-		try {
-			String query = "SELECT id, player, cost, package, status, activated FROM toothpackages WHERE status = '2' ORDER BY player";
-		    Statement stmt = conn.createStatement();
-			ResultSet rs = stmt.executeQuery(query);
-		    query = "UPDATE toothpackages SET status = '3', expired = '"+System.currentTimeMillis()+ "' WHERE status = '2'";
-		    query=query+" AND NOT ('1'='0'";
-		    while (rs.next()) {
-		    	if(rs.getObject("player") != null){
-		    		String player = rs.getString("player");
-		    		String packageoption = rs.getString("package");
-		    		float amount = rs.getFloat("cost");
-		    		long active = rs.getLong("activated");
-		    		long current = System.currentTimeMillis();
-		    		long expire = (((long)config.getInt("Config.Packages."+packageoption+".Days"))*24*60*60*1000);
-		    		int id = rs.getInt("id");
-		    		if(!(getServer().getPlayer(player)!=null&&onlinemode)&&(current-active)>=expire&&expire!=0){
-		    			PackageExpiresEvent event = new PackageExpiresEvent(player, packageoption, amount, active);
-		    			this.getServer().getPluginManager().callEvent(event);
-		    			packageExpiration(player, packageoption);
-		    			if(getServer().getPlayer(player)!=null){
-		    				getServer().getPlayer(player).sendMessage("Your donation package has expired!");
-		    			}
-		    		} else {
-		    			query = query + " OR (id = '"+id+"' AND player = '"+player+"' AND package = '"+packageoption+"')";
-		    		}
-		    	}
-		    }
-		    query = query + ")";
-		    stmt.executeUpdate(query);
-		} catch (SQLException e) {
-			error(e);
-		}
-		return;
-	}
+
 	public boolean hasPackage(Player player, String packageoption){
 		try {
 			Connection conn = DriverManager.getConnection(url, user, pass);
@@ -1180,7 +1142,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
 					}
 					if(packages){
 						UpdateNewPackages();
-						CheckExpirations();
+						//CheckExpirations();
 					}
 					UpdateNewDonations();
 					if(player!=null){
@@ -1228,7 +1190,8 @@ public class T00thTransaction extends JavaPlugin implements Listener{
     @EventHandler(priority = EventPriority.NORMAL)
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
-        for(String Package: config.getConfigurationSection("Config.Packages").getKeys(false)){
+        for(String Package: config.getConfigurationSection("Config.Packages").getKeys(false))
+        {
         	if(hasPackage(player, Package)){
         		if(config.getBoolean("Config.Packages."+Package+".RunOnLogin")){
         			if(packageActivation(player, Package)){
@@ -1240,7 +1203,7 @@ public class T00thTransaction extends JavaPlugin implements Listener{
          		   public void run() {
          		       for(Player player: Players.keySet()){
          		    	   if(player.isOnline()){
-         		    		   player.sendMessage(ChatColor.DARK_RED+"You have a Donation Package Available: "+Players.get(player));
+         		    		   player.sendMessage(ChatColor.DARK_RED + "Tenes un paquete disponible: "+Players.get(player));
          		    	   }
          		    	   Players.remove(player);
          		       }
@@ -1248,6 +1211,103 @@ public class T00thTransaction extends JavaPlugin implements Listener{
             	}, 120L);
         	}
         	
+        	if(config.getBoolean("Config.Packages."+Package+".RunOnLogin"))
+        	{
+        		try {
+					checkExpiration(player.getName());
+				} catch (SQLException e) {
+					e.printStackTrace();
+				}
+        	}
+        	
         }
     }
+    
+    //Metodo individual
+	private void checkExpiration(String playerName) throws SQLException {
+		if(!packages)
+			return;
+		
+		Connection conn = DriverManager.getConnection(url, user, pass);
+		Statement stmt = null;
+		ResultSet rs = null;
+		
+		try
+		{
+			String querySelect = "SELECT id, player, cost, package, status, activated FROM toothpackages WHERE status = '2' AND LOWER( player ) = LOWER( '" + playerName + "')";
+		    stmt = conn.createStatement();
+			rs = stmt.executeQuery(querySelect);
+			
+		    while (rs.next()) {
+		    	if(rs.getObject("player") != null)
+		    	{
+		    		String packageoption = rs.getString("package");
+		    		long active = rs.getLong("activated");
+		    		long current = System.currentTimeMillis();
+		    		long expire = (((long)config.getInt("Config.Packages."+packageoption+".Days"))*24*60*60*1000);
+		    		int id = rs.getInt("id");
+		    		
+		    		if((current-active) >= expire && expire != 0)
+		    		{
+		    			String queryUpdate = "UPDATE toothpackages SET status = '3', expired = '" + System.currentTimeMillis() + "' WHERE id = '"+ id +"'";
+		    			stmt = conn.createStatement();
+		    			stmt.executeUpdate(queryUpdate);
+		    			
+		    			performCommands(playerName, parseCommands(playerName, packageoption, "Expiration"));
+		    			
+		    			if(getServer().getPlayer(playerName)!=null)
+		    				getServer().getPlayer(playerName).sendMessage(ChatColor.DARK_RED + "Tu paquete " + packageoption +" ha expirado!");
+		    		}
+		    	}
+		    }	
+		}
+		catch (SQLException e) {
+			error(e);
+		}
+		
+		return;
+	}
+	
+	//Metodo grupal (no funciona en 1.7.2 con PEX)
+	public void CheckExpirations() throws SQLException {
+		if(!packages){
+			return;
+		}
+		Connection conn = DriverManager.getConnection(url, user, pass);
+		this.log.info("Running Expiration check!");
+		try {
+			String query = "SELECT id, player, cost, package, status, activated FROM toothpackages WHERE status = '2' ORDER BY player";
+		    Statement stmt = conn.createStatement();
+			ResultSet rs = stmt.executeQuery(query);
+		    query = "UPDATE toothpackages SET status = '3', expired = '"+System.currentTimeMillis()+ "' WHERE status = '2'";
+		    query=query+" AND NOT ('1'='0'";
+		    while (rs.next()) {
+		    	if(rs.getObject("player") != null){
+		    		String player = rs.getString("player");
+		    		String packageoption = rs.getString("package");
+		    		float amount = rs.getFloat("cost");
+		    		long active = rs.getLong("activated");
+		    		long current = System.currentTimeMillis();
+		    		long expire = (((long)config.getInt("Config.Packages."+packageoption+".Days"))*24*60*60*1000);
+		    		int id = rs.getInt("id");
+		    		if((current-active)>=expire&&expire!=0)
+		    		{
+		    			PackageExpiresEvent event = new PackageExpiresEvent(player, packageoption, amount, active);
+		    			this.getServer().getPluginManager().callEvent(event);
+		    			packageExpiration(player, packageoption);
+		    			if(getServer().getPlayer(player)!=null){
+		    				getServer().getPlayer(player).sendMessage("Your donation package has expired!");
+		    			}
+		    		} else {
+		    			query = query + " OR (id = '"+id+"' AND player = '"+player+"' AND package = '"+packageoption+"')";
+		    		}
+		    	}
+		    }
+		    query = query + ")";
+		    stmt.executeUpdate(query);
+		} catch (SQLException e) {
+			error(e);
+		}
+		return;
+	}
 }
