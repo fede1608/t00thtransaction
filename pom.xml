@@ -39,5 +39,15 @@
             </configuration>
       </plugin>
     </plugins>
+            <resources>
+            <resource>
+                <directory>${basedir}</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>plugin.yml</include>
+                    <include>config.yml</include>
+                </includes>
+            </resource>
+        </resources>
   </build>
 </project>
